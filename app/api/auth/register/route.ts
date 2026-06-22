@@ -21,24 +21,21 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create({
+    await User.create({
       name,
       email,
       password: hashedPassword,
     });
 
     return NextResponse.json(
-      {
-        success: true,
-        user,
-      },
+      { message: "User registered successfully" },
       { status: 201 }
     );
   } catch (error) {
-    console.log(error);
+    console.error(error);
 
     return NextResponse.json(
-      { message: "Registration failed" },
+      { message: "Server Error" },
       { status: 500 }
     );
   }

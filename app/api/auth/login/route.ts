@@ -9,9 +9,7 @@ export async function POST(req: Request) {
   try {
     await connectDB();
 
-    const body = await req.json();
-
-    const { email, password } = body;
+    const { email, password } = await req.json();
 
     const user = await User.findOne({ email });
 
@@ -22,12 +20,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const match = await bcrypt.compare(
+    const isMatch = await bcrypt.compare(
       password,
       user.password
     );
 
-    if (!match) {
+    if (!isMatch) {
       return NextResponse.json(
         { message: "Invalid credentials" },
         { status: 400 }
@@ -36,9 +34,10 @@ export async function POST(req: Request) {
 
     const token = jwt.sign(
       {
-        id: user._id,
+        userId: user._id,
+        email: user.email,
       },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET as string,
       {
         expiresIn: "7d",
       }
@@ -46,11 +45,17 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       token,
-      user,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
     });
   } catch (error) {
+    console.error(error);
+
     return NextResponse.json(
-      { message: "Login failed" },
+      { message: "Server Error" },
       { status: 500 }
     );
   }
